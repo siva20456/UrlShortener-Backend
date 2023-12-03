@@ -28,13 +28,11 @@ nodemon app / node app.js
 - pg - PostgreSQL
 
 ## API Endpoints
-In case of Backend Applications provide a list of your API endpoints, methods, brief descriptions, and examples of request/response.
 GET /api/analytics - retrieve all urls
 POST /api/addUrls - create a new URLs
 
 
 ## Technology Stack
-List and provide a brief overview of the technologies used in the project.
 
 - Node.js
 - Express.js
