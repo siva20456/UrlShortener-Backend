@@ -27,19 +27,21 @@ app.use(express.json())
 //     console.log(result)
 // })
 
-fun = async () => {
-  const user_id = 1
-  const url = 'peter123'
-  const website = 'web'
-  const user = await pool.query(`SELECT clicks FROM analytics WHERE urllink='sivaorent'
-    `)
-  console.log(user, 'hello')
-  if (user.rows.length == 0) {
-    console.log('possible')
-  } else if (user.rows.length > 0) {
-    console.log('not possible')
-  }
+
+const CheckValidity = async () => {
+  const query = `SELECT * FROM urls WHERE EXTRACT(EPOCH FROM (NOW()::timestamp - createddate::timestamp))  >= EXTRACT(EPOCH FROM expirydate::timestamp);`
+  const feed = await pool.query(query)
+  console.log(feed)
+  const urlNames = feed.rows.map(e => e.urllink)
+  console.log(urlNames)
+  urlNames.forEach(async(e) => {
+    const q1 = `DELETE FROM urls WHERE urllink = '${e}';`
+    const q2 = `DELETE FROM analytics WHERE urllink = '${e}';`
+    await pool.query(q1)
+    await pool.query(q2)
+  })
 }
+
 
 app.get('/', (req, res, next) => {
   res.send('Hello World')
@@ -153,6 +155,7 @@ app.get('/analytics', Authorization, async (req, res, next) => {
   try {
     const { username } = req
     console.log(username)
+    CheckValidity()
     const user_data = await pool.query(`SELECT * FROM users WHERE username='${username}'`)
     const user = user_data.rows[0]
     const query = `SELECT * FROM urls WHERE user_id = '${user.user_id}';`
@@ -161,42 +164,49 @@ app.get('/analytics', Authorization, async (req, res, next) => {
     const analytics_query = `SELECT * FROM analytics WHERE user_id = ${user.user_id}`
     const analytics = await pool.query(analytics_query)
     console.log(url_data, analytics)
-    res.send({ data: {urls: [...url_data.rows],analytics:[...analytics.rows]} })
+    res.send({ data: { urls: [...url_data.rows], analytics: [...analytics.rows] } })
 
   } catch (e) {
     console.error(e)
-    res.status(400).send({error:'Something went wrong..!'})
+    res.status(400).send({ error: 'Something went wrong..!' })
   }
 })
 
-app.post('/getOrigin',Authorization,async(req,res,next) => {
-  try{
-    const {urllink} = req.body
+app.post('/getOrigin', async (req, res, next) => {
+  try {
+    const { urllink } = req.body
+    CheckValidity()
     const count_arr = await pool.query(`SELECT clicks FROM analytics WHERE urllink='${urllink}';`)
     console.log(count_arr)
-    const count = count_arr.rows[0].clicks
-    const feed = await pool.query(`UPDATE analytics SET clicks = ${count + 1} WHERE urllink = '${urllink}'`);
-    const url_arr = await pool.query(`SELECT origin FROM urls WHERE urllink='${urllink}';`)
-    const origin = url_arr.rows[0].origin
-    console.log(origin,count,'hi')
-    res.send({data:origin})
-  }catch(e){
+    if (count_arr.rowCount === 0) {
+      res.status(400).send({ error: 'Link is not valid' })
+    } else {
+
+
+      const count = count_arr.rows[0].clicks
+      const feed = await pool.query(`UPDATE analytics SET clicks = ${count + 1} WHERE urllink = '${urllink}'`);
+      const url_arr = await pool.query(`SELECT origin FROM urls WHERE urllink='${urllink}';`)
+      const origin = url_arr.rows[0].origin
+      console.log(origin, count, 'hi')
+      res.send({ data: origin })
+    }
+  } catch (e) {
     console.log(e)
-    res.status(400).send({error:'Something went wrong..!'})
+    res.status(400).send({ error: 'Something went wrong..!' })
   }
 })
 
-app.post('/addClick',Authorization,async(req,res,next) => {
-  try{
-    const {link} = req.body
+app.post('/addClick', Authorization, async (req, res, next) => {
+  try {
+    const { link } = req.body
     const count_arr = await pool.query(`SELECT clicks FROM analytics WHERE urllink='${link}';`)
     console.log(count_arr)
     const count = count_arr.rows[0].clicks
     const feed = await pool.query(`UPDATE analytics SET clicks = ${count + 1} WHERE urllink = '${link}'`);
     console.log(feed)
-  }catch(e){
+  } catch (e) {
     console.log(e)
-    res.status(400).send({error:'Something went wrong..!'})
+    res.status(400).send({ error: 'Something went wrong..!' })
   }
 })
 
@@ -205,4 +215,3 @@ app.listen(port, () => {
   console.log('Server is running on', port)
 })
 
-// fun()
