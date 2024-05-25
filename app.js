@@ -19,6 +19,13 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header('Access-Control-Allow-Methods', 'GET, POST, UPDATE, DELETE, OPTIONS');
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept , Authorization");
+  next()
+});
+
 // pool.query(`create table analytics(user_id INT REFERENCES users(user_id),urllink VARCHAR(255) NOT NULL,clicks INT,CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id));
 // `,(err,result) => {
 //     if(err){
