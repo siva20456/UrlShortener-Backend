@@ -27,6 +27,23 @@ app.use(express.json())
 //     console.log(result)
 // })
 
+// pool.query(`create table users(user_id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, hashed_password VARCHAR(255) NOT NULL);
+// `,(err,result) => {
+//     if(err){
+//         console.log(err)
+//     }
+//     console.log(result)
+// })
+
+// pool.query(`create table urls(user_id INT REFERENCES users(user_id),urllink VARCHAR(255) UNIQUE NOT NULL,origin VARCHAR(255) NOT NULL,
+// createddate TIMESTAMP NOT NULL,
+// expirydate TIMESTAMP NOT NULL,CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id));
+// `,(err,result) => {
+//     if(err){
+//         console.log(err)
+//     }
+//     console.log(result)
+// })
 
 const CheckValidity = async () => {
   const query = `SELECT * FROM urls WHERE EXTRACT(EPOCH FROM (NOW()::timestamp - createddate::timestamp))  >= EXTRACT(EPOCH FROM expirydate::timestamp);`
